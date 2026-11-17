@@ -1,8 +1,8 @@
 // clock.js - game seconds, the web twin of the firmware's clock.cpp.
 // The only module that reads time. It adds the time since the last update
 // and carries whole seconds, keeping the fraction, so nothing is lost or
-// rounded away. Game time runs while the page is open (a background tab
-// counts too, once it wakes) and stops when the page is closed.
+// rounded away. Game time starts at 0 on every page load and runs while the
+// page is open (a background tab counts too, once it wakes).
 let gameSeconds = 0;
 let remainderMs = 0;
 let lastMs = 0;

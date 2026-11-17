@@ -28,47 +28,52 @@
           <span id="coins" aria-live="polite">$12</span>
         </span>
         <span class="pill" id="game-time">Game time 0 s</span>
+        <button type="button" class="shop-button" id="shop-open" aria-haspopup="dialog">
+          <span class="shop-button__icon" id="shop-icon"></span>
+          <span class="shop-button__text">
+            <span class="shop-button__label">Shop</span>
+            <span class="shop-button__seed" id="shop-seed">Wheat</span>
+          </span>
+        </button>
       </div>
     </header>
 
-    <div class="layout">
-      <main class="layout__main">
-        <section class="card viewport" id="viewport" aria-label="3D farm. Hover a plot to select it, click to plant or harvest, drag to turn the camera, scroll to zoom.">
-          <p class="viewport__fallback" id="webgl-fallback" hidden>
-            This browser can't show the 3D farm (WebGL is off or not supported).
-            You can still play with the keyboard and the button below.
-          </p>
-          <p class="viewport__hint" aria-hidden="true">Drag to turn · Scroll to zoom</p>
-        </section>
+    <main class="main">
+      <section class="card viewport" id="viewport" aria-label="3D farm. Hover a plot to select it, click to plant or harvest, drag to turn the camera, scroll to zoom.">
+        <p class="viewport__fallback" id="webgl-fallback" hidden>
+          This browser can't show the 3D farm (WebGL is off or not supported).
+          You can still play with the arrow keys, Enter and the button below.
+        </p>
+        <p class="viewport__hint" aria-hidden="true">Drag to turn · Scroll to zoom</p>
+      </section>
 
-        <section class="card info" aria-label="Selected plot">
-          <div class="info__text">
-            <div class="info__title">
-              <span class="info__plot" id="info-plot">Plot 1</span>
-              <strong id="info-name">Empty plot</strong>
-              <span class="info__detail" id="info-detail"></span>
-            </div>
-            <span class="progress" aria-hidden="true"><span class="progress__fill" id="info-progress"></span></span>
+      <section class="card info" aria-label="Selected plot">
+        <div class="info__text">
+          <div class="info__title">
+            <span class="info__plot" id="info-plot">Plot 1</span>
+            <strong id="info-name">Empty plot</strong>
+            <span class="info__detail" id="info-detail"></span>
           </div>
-          <button type="button" class="button" id="info-action">Plant</button>
-        </section>
-      </main>
-
-      <aside class="layout__side">
-        <fieldset class="card seeds">
-          <legend class="card__title">Seeds</legend>
-          <div class="seeds__list" id="seed-list"></div>
-        </fieldset>
-
-        <section class="card help" aria-labelledby="help-title">
-          <h2 class="card__title" id="help-title">How to play</h2>
-          <p>Click an empty plot to plant the selected seed. Click a ripe plot (gold ring) to harvest it.</p>
-          <p>Keyboard: arrows move, <kbd>Enter</kbd> plants or harvests, <kbd>1</kbd>–<kbd>3</kbd> pick a seed.</p>
-          <p class="help__meta"><span id="grow-mode">Dev grow times</span> · saved in this browser</p>
-          <button type="button" class="button button--ghost" id="new-farm">New farm</button>
-        </section>
-      </aside>
-    </div>
+          <span class="progress" aria-hidden="true"><span class="progress__fill" id="info-progress"></span></span>
+        </div>
+        <button type="button" class="button" id="info-action">Plant</button>
+      </section>
+    </main>
   </div>
+
+  <dialog class="shop" id="shop" aria-labelledby="shop-title">
+    <div class="shop__head">
+      <h2 class="shop__title" id="shop-title">Seed shop</h2>
+      <button type="button" class="icon-button" id="shop-close" aria-label="Close shop">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <p class="shop__intro">Pick the seed you plant next. You pay when you plant it.</p>
+    <div class="shop__list" id="seed-list"></div>
+    <div class="shop__foot">
+      <span class="shop__meta" id="grow-mode">Dev grow times</span>
+      <button type="button" class="button button--ghost" id="new-farm">New farm</button>
+    </div>
+  </dialog>
 </body>
 </html>

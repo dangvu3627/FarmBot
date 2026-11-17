@@ -1,4 +1,5 @@
-// ui.js - the HTML side of design B: header, tile info bar and seed panel.
+// ui.js - the HTML side: header (coins, game time, shop button), the info
+// bar for the selected plot, and the seed shop dialog.
 // render() runs every frame but only touches the DOM when a value changes.
 import { CROPS } from './crops.js';
 import { Stage, STAGE_NAMES, tileStage, tilePercent, tileSecondsLeft, canAfford } from './game.js';
@@ -8,10 +9,10 @@ const $ = (id) => document.getElementById(id);
 
 // Non-breaking spaces keep a number and its unit on one line.
 export function formatDuration(s) {
-  if (s < 60) return `${s}\u00A0s`;
+  if (s < 60) return `${s} s`;
   const m = Math.floor(s / 60), sec = s % 60;
-  if (m < 60) return sec ? `${m}m\u00A0${sec}s` : `${m}m`;
-  return `${Math.floor(m / 60)}h\u00A0${String(m % 60).padStart(2, '0')}m`;
+  if (m < 60) return sec ? `${m}m ${sec}s` : `${m}m`;
+  return `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`;
 }
 
 // Writes a property only when it differs from what we last wrote.
@@ -26,13 +27,13 @@ function setter() {
   };
 }
 
-// Small inline SVG of a crop's ripe pixel sprite, for the seed panel.
-function spriteSvg(pixels) {
+// Small inline SVG of a crop's ripe pixel sprite.
+function spriteSvg(pixels, size) {
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');
   svg.setAttribute('viewBox', '0 0 16 14');
-  svg.setAttribute('width', '40');
-  svg.setAttribute('height', '35');
+  svg.setAttribute('width', String(size));
+  svg.setAttribute('height', String(Math.round((size * 14) / 16)));
   svg.setAttribute('shape-rendering', 'crispEdges');
   svg.setAttribute('aria-hidden', 'true');
   for (const p of pixels) {
@@ -47,34 +48,28 @@ function spriteSvg(pixels) {
   return svg;
 }
 
-function buildSeedList(container, onSelectSeed) {
+function el(tag, className, text) {
+  const e = document.createElement(tag);
+  if (className) e.className = className;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+// One button per crop. Clicking selects that seed and closes the shop.
+function buildSeedList(container, onPick) {
   return CROPS.map((crop, i) => {
-    const label = document.createElement('label');
-    label.className = 'seed';
-
-    const input = document.createElement('input');
-    input.type = 'radio';
-    input.name = 'seed';
-    input.value = String(i);
-    input.addEventListener('change', () => onSelectSeed(i));
-
-    const text = document.createElement('span');
-    text.className = 'seed__text';
-    const name = document.createElement('span');
-    name.className = 'seed__name';
-    name.textContent = `${crop.name}`;
-    const detail = document.createElement('span');
-    detail.className = 'seed__detail';
-    detail.textContent = `Ripe in ${formatDuration(crop.growSeconds)}`;
-    text.append(name, detail);
-
-    const price = document.createElement('span');
-    price.className = 'seed__price';
-    price.textContent = `$${crop.seedCost} → $${crop.sellPrice}`;
-
-    label.append(input, spriteSvg(RIPE_SPRITES[i]), text, price);
-    container.appendChild(label);
-    return input;
+    const button = el('button', 'seed');
+    button.type = 'button';
+    const text = el('span', 'seed__text');
+    text.append(el('span', 'seed__name', crop.name),
+                el('span', 'seed__detail', `Ripe in ${formatDuration(crop.growSeconds)}`));
+    const note = el('span', 'seed__note');
+    const right = el('span', 'seed__right');
+    right.append(el('span', 'seed__price', `$${crop.seedCost} → $${crop.sellPrice}`), note);
+    button.append(spriteSvg(RIPE_SPRITES[i], 40), text, right);
+    button.addEventListener('click', () => onPick(i));
+    container.appendChild(button);
+    return { button, note };
   });
 }
 
@@ -108,13 +103,31 @@ function describeTile(game, tile, now) {
   };
 }
 
+function wireShop(dialog, onPick) {
+  $('shop-open').addEventListener('click', () => dialog.showModal());
+  $('shop-close').addEventListener('click', () => dialog.close());
+  // A click on the dim backdrop (the dialog element itself) closes it.
+  dialog.addEventListener('click', (e) => { if (e.target === dialog) dialog.close(); });
+  return (i) => {
+    onPick(i);
+    dialog.close();
+  };
+}
+
 export function createUi({ onSelectSeed, onAction, onNewFarm }) {
   const set = setter();
-  const seedInputs = buildSeedList($('seed-list'), onSelectSeed);
+  const dialog = $('shop');
+  const seeds = buildSeedList($('seed-list'), wireShop(dialog, onSelectSeed));
   $('info-action').addEventListener('click', onAction);
-  $('new-farm').addEventListener('click', onNewFarm);
+  $('new-farm').addEventListener('click', () => {
+    dialog.close();
+    onNewFarm();
+  });
+  let shownSeed = -1;
 
   return {
+    isShopOpen: () => dialog.open,
+
     render(game, cursor, now) {
       set($('coins'), 'textContent', `$${game.coins}`);
       set($('game-time'), 'textContent', `Game time ${formatDuration(now)}`);
@@ -127,8 +140,17 @@ export function createUi({ onSelectSeed, onAction, onNewFarm }) {
       set($('info-action'), 'textContent', info.action);
       set($('info-action'), 'disabled', !info.enabled);
 
-      seedInputs.forEach((input, i) => {
-        if (input.checked !== (i === game.selected)) input.checked = i === game.selected;
+      if (shownSeed !== game.selected) {   // shop button shows the current seed
+        shownSeed = game.selected;
+        $('shop-icon').replaceChildren(spriteSvg(RIPE_SPRITES[game.selected], 28));
+        $('shop-seed').textContent = CROPS[game.selected].name;
+        $('shop-open').setAttribute('aria-label', `Shop, current seed ${CROPS[game.selected].name}`);
+      }
+      seeds.forEach(({ button, note }, i) => {
+        const current = i === game.selected;
+        if (button.getAttribute('aria-pressed') !== String(current)) button.setAttribute('aria-pressed', String(current));
+        const text = current ? 'Selected' : (canAfford(game, i) ? '' : `Need $${CROPS[i].seedCost}`);
+        if (note.textContent !== text) note.textContent = text;
       });
     },
   };

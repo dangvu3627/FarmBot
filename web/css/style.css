@@ -29,7 +29,7 @@ body {
   padding: 28px 20px 48px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 /* ---- top bar ---- */
@@ -47,12 +47,13 @@ body {
   font-size: 32px;
   letter-spacing: 1px;
 }
-.topbar__stats { display: flex; flex-wrap: wrap; gap: 12px; }
+.topbar__stats { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .pill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
+  min-height: 44px;
+  padding: 0 14px;
   border-radius: 999px;
   background: var(--card);
   border: 1px solid var(--line);
@@ -67,30 +68,51 @@ body {
   font-size: 18px;
 }
 
-/* ---- layout ---- */
-.layout { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
-.layout__main { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
-.layout__side { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.shop-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 18px 4px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #0E1411;
+  font: 600 15px var(--sans);
+  cursor: pointer;
+}
+.shop-button:hover { background: #BDEE80; }
+.shop-button__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #0E1411;
+}
+.shop-button__icon svg { width: 22px; height: 19px; }
+.shop-button__text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
+.shop-button__label { font-family: var(--pixel); font-weight: 400; font-size: 15px; }
+.shop-button__seed { font-size: 12px; font-weight: 500; color: #233318; }
+
+/* ---- main column ---- */
+.main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 
 .card {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 16px;
 }
-.card__title {
-  margin: 0;
-  font-family: var(--pixel);
-  font-weight: 400;
-  font-size: 16px;
-}
 
 /* ---- 3D viewport ---- */
 .viewport {
   position: relative;
   /* Follows the width on phones (so the farm fills the box), the height on desktops. */
-  height: clamp(300px, min(62vh, 85vw), 620px);
+  height: clamp(320px, min(70vh, 85vw), 720px);
   overflow: hidden;
   padding: 0;
+  background: #24402C;
 }
 .viewport canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 .viewport__hint {
@@ -98,8 +120,11 @@ body {
   right: 14px;
   bottom: 10px;
   margin: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #0E1411B3;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--body);
   pointer-events: none;
 }
 .viewport__fallback {
@@ -111,10 +136,35 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: var(--body);
+  color: var(--text);
+  background: var(--card);
   line-height: 1.5;
 }
 .viewport__fallback[hidden] { display: none; }
+
+/* Growth bars floating above planted plots (positioned by plot-bars.js). */
+.plot-bars { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.plot-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: none;
+  height: 8px;
+  padding: 1px;
+  border-radius: 4px;
+  background: #0E1411D9;
+  box-shadow: 0 0 0 1px #0E1411, 0 2px 4px #00000066;
+  will-change: transform;
+}
+.plot-bar__fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 3px;
+  background: var(--accent);
+  transition: width 0.4s linear;
+}
+.plot-bar--ripe .plot-bar__fill { background: var(--gold); box-shadow: 0 0 6px #F2C14E; }
 
 .float-text {
   position: absolute;
@@ -126,7 +176,7 @@ body {
   animation: float-up 1.1s ease-out forwards;
 }
 .float-text--earn { color: var(--gold); }
-.float-text--spend { color: var(--muted); font-size: 16px; }
+.float-text--spend { color: var(--text); font-size: 16px; }
 @keyframes float-up {
   from { opacity: 1; transform: translate(-50%, -50%); }
   to { opacity: 0; transform: translate(-50%, -160%); }
@@ -134,9 +184,10 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .float-text { animation-duration: 0.6s; }
   @keyframes float-up { from { opacity: 1; } to { opacity: 0; } }
+  .plot-bar__fill { transition: none; }
 }
 
-/* ---- tile info bar ---- */
+/* ---- selected plot info bar ---- */
 .info {
   padding: 16px 20px;
   display: flex;
@@ -164,41 +215,78 @@ body {
 }
 .button:hover:not(:disabled) { background: #BDEE80; }
 .button:disabled { background: #22302A; border-color: var(--line-strong); color: var(--muted); cursor: not-allowed; }
-.button--ghost { background: transparent; color: var(--text); border-color: var(--line-strong); align-self: flex-start; }
+.button--ghost { background: transparent; color: var(--text); border-color: var(--line-strong); }
 .button--ghost:hover:not(:disabled) { background: #22302A; }
-.button:focus-visible, .seed:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* ---- seeds ---- */
-.seeds { margin: 0; padding: 16px; }
-.seeds legend { padding: 0 6px; }
-.seeds__list { display: flex; flex-direction: column; gap: 10px; }
+.icon-button {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+.icon-button:hover { background: #22302A; }
+
+.button:focus-visible, .shop-button:focus-visible, .icon-button:focus-visible, .seed:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---- seed shop dialog ---- */
+.shop {
+  width: min(440px, calc(100vw - 32px));
+  padding: 20px;
+  border: 1px solid var(--line-strong);
+  border-radius: 18px;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 24px 60px #000000A6;
+}
+.shop[open] { display: flex; flex-direction: column; gap: 14px; }
+.shop::backdrop { background: #050807B3; }
+.shop__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.shop__title { margin: 0; font-family: var(--pixel); font-weight: 400; font-size: 20px; }
+.shop__intro { margin: 0; font-size: 14px; color: var(--muted); }
+.shop__list { display: flex; flex-direction: column; gap: 10px; }
+.shop__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.shop__meta { font-size: 13px; color: var(--muted); }
+
 .seed {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: 44px;
-  padding: 10px 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 14px;
   border-radius: 12px;
   border: 1px solid var(--line);
   background: var(--card-alt);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
   cursor: pointer;
 }
-.seed:has(input:checked) { border: 2px solid var(--accent); background: #1F2D22; padding: 9px 11px; }
-.seed input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+.seed:hover { border-color: var(--line-strong); background: #1B261E; }
+.seed[aria-pressed="true"] { border: 2px solid var(--accent); background: #1F2D22; padding: 9px 13px; }
 .seed svg { flex: none; }
 .seed__text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .seed__name { font-weight: 600; font-size: 15px; }
 .seed__detail { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.seed__right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .seed__price { font-family: var(--pixel); font-size: 14px; color: var(--gold); white-space: nowrap; }
-
-/* ---- help ---- */
-.help { padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
-.help p { margin: 0; color: var(--body); line-height: 1.5; }
-.help .help__meta { color: var(--muted); font-size: 13px; }
-kbd {
-  font-family: var(--pixel);
-  font-size: 12px;
-  border: 1px solid var(--line-strong);
-  border-radius: 4px;
-  padding: 1px 6px;
-}
+.seed__note { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.seed__note:empty { display: none; }
+.seed[aria-pressed="true"] .seed__note { color: var(--accent); }

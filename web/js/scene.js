@@ -3,29 +3,27 @@
 // 32 raised soil plots in the same 8 x 4 layout as the console (row 0 at the
 // back). Each crop is the firmware's pixel sprite, built from small boxes
 // ("voxels") in one InstancedMesh per plot. Mouse: hover selects a plot,
-// click acts on it, drag orbits the camera, wheel zooms.
+// click acts on it, drag orbits the camera, wheel zooms. The scenery around
+// the field lives in environment.js; the growth bars in plot-bars.js.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GRID_COLS, TILE_COUNT, Stage } from './game.js';
 import { spriteFor } from './sprites.js';
+import { createEnvironment } from './environment.js';
+import { createPlotBars } from './plot-bars.js';
 
 const PX = 0.1;                           // one sprite pixel, in world units
 const PLOT_W = 1.5, PLOT_D = 1.3, PLOT_H = 0.22;
 const PITCH_X = PLOT_W + 0.25, PITCH_Z = PLOT_D + 0.35;
-const BAR_W = PLOT_W - 0.3;
 const CLICK_SLOP_PX = 6;                  // pointer travel that still counts as a click
 
 const COLORS = {
-  background: '#0E1411',
-  ground: '#1D2E1F',
-  soil: '#5A4030',
-  soilTop: '#46301F',
-  barBack: '#2E2519',
+  soil: '#6A4A33',
+  soilTop: '#4E3524',
   ripe: '#F2C14E',
 };
 
 const boxGeo = new THREE.BoxGeometry(1, 1, 1);
-const barFillGeo = new THREE.BoxGeometry(1, 1, 1).translate(0.5, 0, 0);  // grows from its left edge
 const voxelMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0 });
 
 function plotCenter(i) {
@@ -82,8 +80,7 @@ export function createScene(container, { onHover, onPress, accent }) {
   container.prepend(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(COLORS.background);
-  scene.fog = new THREE.Fog(COLORS.background, 22, 45);
+  const environment = createEnvironment(scene);
 
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
   camera.position.set(0, 10.5, 12.5);
@@ -97,10 +94,8 @@ export function createScene(container, { onHover, onPress, accent }) {
   controls.maxPolarAngle = 1.2;   // never below the ground
   controls.update();
 
-  addLights(scene);
-  addGround(scene);
-
   const plots = buildPlots(scene);
+  const bars = createPlotBars(container, plots, PLOT_W);
   const cursorFrame = makeFrame(accent, 0.09, 0.6);
   cursorFrame.position.y = 0.005;  // sits just above the ripe ring
   scene.add(cursorFrame);
@@ -122,38 +117,18 @@ export function createScene(container, { onHover, onPress, accent }) {
         // Ripe crops bob gently so they read as "ready" from any angle.
         plot.plant.position.y = PLOT_H + (plot.ripe ? 0.04 * (1 + Math.sin(t * 3 + plot.index)) : 0);
       }
+      environment.update(t);
       controls.update();
       renderer.render(scene, camera);
+      bars.update(camera, PLOT_H);
     },
   };
 }
 
-function addLights(scene) {
-  scene.add(new THREE.HemisphereLight('#D6ECFF', '#2A3A2E', 1.2));
-  const sun = new THREE.DirectionalLight('#FFF1D6', 2.2);
-  sun.position.set(6, 12, 8);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  Object.assign(sun.shadow.camera, { left: -10, right: 10, top: 10, bottom: -10, near: 1, far: 40 });
-  sun.shadow.bias = -0.0005;
-  scene.add(sun);
-}
-
-function addGround(scene) {
-  const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(80, 80),
-    new THREE.MeshStandardMaterial({ color: COLORS.ground, roughness: 1 }),
-  );
-  ground.rotation.x = -Math.PI / 2;
-  ground.receiveShadow = true;
-  scene.add(ground);
-}
 
 function buildPlots(scene) {
   const soilMat = new THREE.MeshStandardMaterial({ color: COLORS.soil, roughness: 1 });
   const topMat = new THREE.MeshStandardMaterial({ color: COLORS.soilTop, roughness: 1 });
-  const barBackMat = new THREE.MeshStandardMaterial({ color: COLORS.barBack });
-  const barFillMat = new THREE.MeshStandardMaterial({ color: '#A6E35F', emissive: '#A6E35F', emissiveIntensity: 0.4 });
   const plots = [];
 
   for (let i = 0; i < TILE_COUNT; i++) {
@@ -175,22 +150,15 @@ function buildPlots(scene) {
     const ripeRing = makeFrame(COLORS.ripe, 0.05, 0.45);
     ripeRing.visible = false;
 
-    const bar = new THREE.Group();   // progress bar along the plot's front edge
-    bar.position.set(0, 0.08, PLOT_D / 2 + 0.08);
-    const barBack = new THREE.Mesh(boxGeo, barBackMat);
-    barBack.scale.set(BAR_W, 0.06, 0.06);
-    const fill = new THREE.Mesh(barFillGeo, barFillMat);
-    fill.position.set(-BAR_W / 2, 0, 0.01);
-    fill.scale.set(0.001, 0.07, 0.07);
-    bar.add(barBack, fill);
-    bar.visible = false;
 
     const plant = new THREE.Group();
     plant.position.y = PLOT_H;
 
-    group.add(soil, top, ripeRing, bar, plant);
+    soil.castShadow = true;
+    group.add(soil, top, ripeRing, plant);
     scene.add(group);
-    plots.push({ index: i, center, soil, top, ripeRing, bar, fill, plant, mesh: null, key: '', ripe: false });
+    plots.push({ index: i, center, soil, top, ripeRing, plant, mesh: null, key: '', ripe: false,
+                 stage: Stage.Empty, percent: 0 });
   }
   return plots;
 }
@@ -214,9 +182,8 @@ function syncTile(plot, stage, crop, percent) {
     plot.ripe = stage === Stage.Ripe;
     plot.ripeRing.visible = plot.ripe;
   }
-  const growing = stage !== Stage.Empty && stage !== Stage.Ripe;
-  plot.bar.visible = growing;
-  if (growing) plot.fill.scale.x = Math.max(0.001, (BAR_W * percent) / 100);
+  plot.stage = stage;      // read by plot-bars.js
+  plot.percent = percent;
 }
 
 // Hover moves the cursor; a click (press and release without dragging)
@@ -263,7 +230,7 @@ function wirePointer(canvas, camera, plots, onHover, onPress) {
 // Keeps the canvas sized to its box and moves the camera back far enough
 // that all 8 columns fit across, whatever the window shape.
 function watchSize(container, renderer, camera, controls) {
-  const farmWidth = GRID_COLS * PITCH_X + 1;
+  const farmWidth = GRID_COLS * PITCH_X + 3.5;   // plots plus the fence around them
   const fit = () => {
     const w = container.clientWidth, h = container.clientHeight;
     if (!w || !h) return;

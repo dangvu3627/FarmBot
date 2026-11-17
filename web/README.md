@@ -31,14 +31,17 @@ the page falls back to system fonts.
 | Click a plot | Plants the selected seed on an empty plot, or harvests a ripe one (gold ring) |
 | Drag | Turns the camera |
 | Scroll | Zooms |
-| Seed panel | Picks the seed to plant |
+| **Shop** button | Opens the seed shop; click a seed to select it (you pay when you plant) |
 | Arrow keys | Move the selection (left/right step through plots, up/down jump a row) |
 | `Enter` / `Space` | Plant or harvest the selected plot |
 | `1`–`3` | Pick wheat, carrot or pumpkin |
 
-The game saves in this browser after every action, every 5 seconds, and when
-you close or hide the tab. Game time only runs while the page is open. **New
-farm** starts over.
+A bar above each planted plot shows its growth: green while growing, gold
+when ripe.
+
+Progress isn't saved. Every time you open or reload the page you start a
+fresh farm with $12 and the game time at 0. **New farm**, at the bottom of the
+seed shop, starts over without reloading.
 
 ## File architecture
 
@@ -48,13 +51,14 @@ css/style.css        styles: dark field palette, Silkscreen + Inter
 js/crops.js          crop table; ?real switches to real grow times
 js/game.js           pure rules, ported from the firmware's game.cpp
 js/clock.js          game seconds; the only module that reads time
-js/save.js           versioned save in localStorage
 js/sprites.js        the firmware's 16x14 sprites as coloured pixels with depth
 js/scene.js          Three.js farm: plots, voxel crops, camera, mouse picking
-js/ui.js             header, info bar and seed panel
+js/environment.js    scenery: light, grass, flowers, fence, trees, pond, pollen
+js/plot-bars.js      growth bars floating above planted plots
+js/ui.js             header, shop button and dialog, info bar
 js/main.js           wiring, keyboard and the frame loop
 vendor/three/        Three.js r170 (MIT, see LICENSE) and OrbitControls
 ```
 
 Each frame runs in this order: `clock` → `game` rules → `scene` (3D) → `ui`
-(HTML) → `save`.
+(HTML).
