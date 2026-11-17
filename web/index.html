@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FarmBot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Silkscreen&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three/three.module.js",
+        "three/addons/": "./vendor/three/addons/"
+      }
+    }
+  </script>
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <h1 class="logo">FarmBot</h1>
+      <div class="topbar__stats">
+        <span class="pill pill--coins">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.75 1.75 0 0 1 0 3.5h-3a1.75 1.75 0 0 0 0 3.5h4"/></svg>
+          <span id="coins" aria-live="polite">$12</span>
+        </span>
+        <span class="pill" id="game-time">Game time 0 s</span>
+      </div>
+    </header>
+
+    <div class="layout">
+      <main class="layout__main">
+        <section class="card viewport" id="viewport" aria-label="3D farm. Hover a plot to select it, click to plant or harvest, drag to turn the camera, scroll to zoom.">
+          <p class="viewport__fallback" id="webgl-fallback" hidden>
+            This browser can't show the 3D farm (WebGL is off or not supported).
+            You can still play with the keyboard and the button below.
+          </p>
+          <p class="viewport__hint" aria-hidden="true">Drag to turn · Scroll to zoom</p>
+        </section>
+
+        <section class="card info" aria-label="Selected plot">
+          <div class="info__text">
+            <div class="info__title">
+              <span class="info__plot" id="info-plot">Plot 1</span>
+              <strong id="info-name">Empty plot</strong>
+              <span class="info__detail" id="info-detail"></span>
+            </div>
+            <span class="progress" aria-hidden="true"><span class="progress__fill" id="info-progress"></span></span>
+          </div>
+          <button type="button" class="button" id="info-action">Plant</button>
+        </section>
+      </main>
+
+      <aside class="layout__side">
+        <fieldset class="card seeds">
+          <legend class="card__title">Seeds</legend>
+          <div class="seeds__list" id="seed-list"></div>
+        </fieldset>
+
+        <section class="card help" aria-labelledby="help-title">
+          <h2 class="card__title" id="help-title">How to play</h2>
+          <p>Click an empty plot to plant the selected seed. Click a ripe plot (gold ring) to harvest it.</p>
+          <p>Keyboard: arrows move, <kbd>Enter</kbd> plants or harvests, <kbd>1</kbd>–<kbd>3</kbd> pick a seed.</p>
+          <p class="help__meta"><span id="grow-mode">Dev grow times</span> · saved in this browser</p>
+          <button type="button" class="button button--ghost" id="new-farm">New farm</button>
+        </section>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

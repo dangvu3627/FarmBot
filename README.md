@@ -17,6 +17,12 @@ rotary encoder. Built with PlatformIO and the Arduino framework.
 
    Some boards need the **BOOT** button held when the upload starts.
 
+### Web version
+
+`web/` has a 3D browser version of the game with the same rules. To run it:
+`cd web && python3 -m http.server 8000`, then open http://localhost:8000.
+See [web/README.md](web/README.md).
+
 ### Dev vs real grow times
 
 The compile-time flag `FARM_GROW_REAL` in `include/crops.h` sets the grow
