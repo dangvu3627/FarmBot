@@ -21,7 +21,7 @@ uint32_t lastViewKey = 0;
 void updateFarm(const InputEvents& ev, uint32_t t) {
     cursor = wrapIndex(cursor, ev.steps, TILE_COUNT);
     if (ev.press && pressTile(game, cursor, t) != PressResult::None) saveRequest();
-    if (ev.back) {
+    if (ev.hold) {
         menuRow = game.selected;
         mode = Mode::SeedMenu;
     }
@@ -33,7 +33,7 @@ void updateMenu(const InputEvents& ev) {
         game.selected = menuRow;
         saveRequest();
         mode = Mode::Farm;
-    } else if (ev.back) {
+    } else if (ev.hold) {
         mode = Mode::Farm;   // close without changing the selection
     }
 }
@@ -49,7 +49,7 @@ uint32_t viewKey(uint32_t t) {
 void frame() {
     const uint32_t t = now();
     const InputEvents ev = inputTake();
-    if (ev.steps != 0 || ev.press || ev.back) renderMarkDirty();
+    if (ev.steps != 0 || ev.press || ev.hold) renderMarkDirty();
 
     if (mode == Mode::Farm) updateFarm(ev, t);
     else                    updateMenu(ev);
@@ -83,7 +83,7 @@ void setup() {
 
 void loop() {
     clockUpdate();
-    inputUpdate();   // sample buttons every pass (~1 ms) for clean debounce
+    inputUpdate();   // sample the switch every pass (~1 ms) for clean debounce
     const uint32_t ms = uptimeMs();
     if (ms - lastFrameMs >= FRAME_MS) {
         lastFrameMs += FRAME_MS;

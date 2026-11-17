@@ -13,7 +13,6 @@ constexpr uint32_t OLED_I2C_HZ    = 400000;   // fast-mode I2C
 constexpr uint8_t PIN_ENC_A   = 32;
 constexpr uint8_t PIN_ENC_B   = 33;
 constexpr uint8_t PIN_ENC_SW  = 25;   // push switch, active low, internal pull-up
-constexpr uint8_t PIN_BTN_B   = 26;   // button B, active low, internal pull-up
 
 // Quadrature edges per mechanical detent. Most detented encoders (EC11 etc.)
 // produce a full 4-edge cycle per click. Set to 2 for half-cycle encoders.
@@ -26,6 +25,7 @@ constexpr uint16_t ENC_FILTER_APB_CYCLES = 1023;
 
 // ---- Timing ----------------------------------------------------------------
 constexpr uint32_t BUTTON_DEBOUNCE_MS = 25;
+constexpr uint32_t LONG_PRESS_MS      = 1000;  // encoder hold that opens/closes the seed menu
 constexpr uint32_t FRAME_MS           = 33;   // ~30 Hz game loop
 constexpr uint32_t CPU_MHZ            = 80;
 

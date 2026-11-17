@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "author": "FarmBot",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    {
+      "type": "board-ssd1306",
+      "id": "oled",
+      "top": -60,
+      "left": 230,
+      "attrs": { "i2cAddress": "0x3c" }
+    },
+    { "type": "wokwi-ky-040", "id": "enc", "top": 90, "left": 240, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+
+    [ "oled:SDA", "esp:21", "green", [] ],
+    [ "oled:SCL", "esp:22", "yellow", [] ],
+    [ "oled:VCC", "esp:3V3", "red", [] ],
+    [ "oled:GND", "esp:GND.1", "black", [] ],
+
+    [ "enc:CLK", "esp:32", "orange", [] ],
+    [ "enc:DT", "esp:33", "purple", [] ],
+    [ "enc:SW", "esp:25", "blue", [] ],
+    [ "enc:VCC", "esp:3V3", "red", [] ],
+    [ "enc:GND", "esp:GND.1", "black", [] ]
+  ],
+  "dependencies": {}
+}
