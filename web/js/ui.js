@@ -1,7 +1,8 @@
-// ui.js - the HTML side: header (coins, game time, shop button), the info
-// bar for the selected plot, and the seed shop dialog.
+// ui.js - the HTML side: header (coins, game time, console status, shop
+// button), the info bar for the selected plot, the seed shop dialog, toasts
+// and the demo overlay.
 // render() runs every frame but only touches the DOM when a value changes.
-import { CROPS } from './crops.js';
+import { CROPS, GROW_MODE } from './crops.js';
 import { Stage, STAGE_NAMES, tileStage, tilePercent, tileSecondsLeft, canAfford } from './game.js';
 import { RIPE_SPRITES } from './sprites.js';
 
@@ -55,8 +56,12 @@ function el(tag, className, text) {
   return e;
 }
 
+// The console has one sprite per crop in crops.h; extra crops reuse the last.
+const ripeSprite = (i) => RIPE_SPRITES[Math.min(i, RIPE_SPRITES.length - 1)];
+
 // One button per crop. Clicking selects that seed and closes the shop.
 function buildSeedList(container, onPick) {
+  container.replaceChildren();
   return CROPS.map((crop, i) => {
     const button = el('button', 'seed');
     button.type = 'button';
@@ -66,7 +71,7 @@ function buildSeedList(container, onPick) {
     const note = el('span', 'seed__note');
     const right = el('span', 'seed__right');
     right.append(el('span', 'seed__price', `$${crop.seedCost} → $${crop.sellPrice}`), note);
-    button.append(spriteSvg(RIPE_SPRITES[i], 40), text, right);
+    button.append(spriteSvg(ripeSprite(i), 40), text, right);
     button.addEventListener('click', () => onPick(i));
     container.appendChild(button);
     return { button, note };
@@ -114,35 +119,104 @@ function wireShop(dialog, onPick) {
   };
 }
 
-export function createUi({ onSelectSeed, onAction, onNewFarm }) {
+// Header pill text for each view mode (see main.js viewMode()).
+function linkLabel(mode, lastSeen) {
+  switch (mode) {
+    case 'live': return 'Console live';
+    case 'demo': return 'Demo · join FarmBot Wi-Fi';
+    case 'busy': return 'Console busy';
+    case 'mismatch': return 'Update needed';
+    default:
+      return lastSeen
+        ? `Offline · last seen ${new Date(lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+        : 'Offline';
+  }
+}
+
+const LINK_HELP = {
+  live: 'Connected to the console. It runs the game; this page shows it and sends your clicks.',
+  demo: 'No console yet. This farm is a demo that plays itself.',
+  busy: 'Another browser is connected to the console. Only one can play at a time.',
+  mismatch: "The console's firmware and this page speak different protocol versions. Update one of them.",
+  connecting: 'The console is off or out of reach. This is the last farm it sent; crops grow again when it is back.',
+  paused: 'This tab was hidden, so it let go of the console. It reconnects now.',
+};
+
+// What the action button says when the page can't play.
+const READONLY_ACTION = {
+  demo: 'Join FarmBot Wi-Fi to play',
+  busy: 'Console busy',
+  mismatch: 'Update needed',
+  connecting: 'Console offline',
+  paused: 'Console offline',
+};
+
+export function createUi({ onSelectSeed, onAction }) {
   const set = setter();
   const dialog = $('shop');
-  const seeds = buildSeedList($('seed-list'), wireShop(dialog, onSelectSeed));
+  const pickSeed = wireShop(dialog, onSelectSeed);
+  let seeds = buildSeedList($('seed-list'), pickSeed);
   $('info-action').addEventListener('click', onAction);
-  $('new-farm').addEventListener('click', () => {
-    dialog.close();
-    onNewFarm();
-  });
   let shownSeed = -1;
+  let shownMode = '';
+
+  const toasts = $('toasts');
 
   return {
     isShopOpen: () => dialog.open,
 
-    render(game, cursor, now) {
+    // The console sent its crop table: rebuild the shop from it.
+    setCrops() {
+      seeds = buildSeedList($('seed-list'), pickSeed);
+      shownSeed = -1;
+      $('grow-mode').textContent = GROW_MODE === 'real' ? 'Real grow times' : 'Dev grow times';
+    },
+
+    // Shows or hides the demo instructions. `address` is set when the page
+    // looks for a console somewhere other than the hotspot (mock, Wokwi).
+    setDemo(on, address) {
+      $('demo').hidden = !on;
+      if (on && address) $('demo-steps').replaceChildren(el('li', '', `Waiting for a console at ${address}.`));
+    },
+
+    // A short message in the corner of the farm. kind: info, earn, error.
+    toast(text, kind = 'info') {
+      const t = el('div', `toast toast--${kind}`, text);
+      toasts.appendChild(t);
+      while (toasts.children.length > 3) toasts.firstChild.remove();
+      setTimeout(() => {
+        t.classList.add('toast--out');
+        t.addEventListener('animationend', () => t.remove());
+      }, 2600);
+    },
+
+    render(game, cursor, now, link) {
+      const live = link.mode === 'live';
       set($('coins'), 'textContent', `$${game.coins}`);
       set($('game-time'), 'textContent', `Game time ${formatDuration(now)}`);
+
+      set($('link'), 'textContent', linkLabel(link.mode, link.lastSeen));
+      if (shownMode !== link.mode) {
+        shownMode = link.mode;
+        $('link').dataset.mode = link.mode;
+        $('link').title = LINK_HELP[link.mode] ?? '';
+        $('shop-open').disabled = !live;
+        if (!live && dialog.open) dialog.close();
+        // Dim the field when it shows a frozen farm (not in the demo).
+        $('viewport').classList.toggle('viewport--readonly', !live && link.mode !== 'demo');
+      }
 
       const info = describeTile(game, game.tiles[cursor], now);
       set($('info-plot'), 'textContent', `Plot ${cursor + 1}`);
       set($('info-name'), 'textContent', info.name);
-      set($('info-detail'), 'textContent', info.detail);
+      set($('info-detail'), 'textContent', live ? info.detail : LINK_HELP[link.mode] ?? '');
       set($('info-progress'), 'width', `${info.percent}%`);
-      set($('info-action'), 'textContent', info.action);
-      set($('info-action'), 'disabled', !info.enabled);
+      set($('info-action'), 'textContent', live ? info.action : READONLY_ACTION[link.mode] ?? 'Console offline');
+      set($('info-action'), 'disabled', !live || !info.enabled);
 
       if (shownSeed !== game.selected) {   // shop button shows the current seed
         shownSeed = game.selected;
-        $('shop-icon').replaceChildren(spriteSvg(RIPE_SPRITES[game.selected], 28));
+        $('shop-icon').replaceChildren(spriteSvg(ripeSprite(game.selected), 28));
         $('shop-seed').textContent = CROPS[game.selected].name;
         $('shop-open').setAttribute('aria-label', `Shop, current seed ${CROPS[game.selected].name}`);
       }

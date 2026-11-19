@@ -30,5 +30,17 @@ constexpr uint32_t FRAME_MS           = 33;   // ~30 Hz game loop
 constexpr uint32_t CPU_MHZ            = 80;
 
 // ---- Saving (game seconds) -------------------------------------------------
-constexpr uint32_t SAVE_MIN_INTERVAL_S = 60;    // event saves at most this often
+constexpr uint32_t SAVE_MIN_INTERVAL_S = 30;    // event saves at most this often
+                                                // (a power cut loses at most this much)
 constexpr uint32_t SAVE_PERIODIC_S     = 300;   // unconditional save period
+
+// ---- Web link (Wi-Fi hotspot + WebSocket) ---------------------------------
+// The console makes its own WPA2 hotspot; the browser opens
+// ws://192.168.4.1/ws. WPA2 needs a password of at least 8 characters.
+constexpr char     AP_SSID[]       = "FarmBot";
+constexpr char     AP_PASSWORD[]   = "farmbot123";
+constexpr uint8_t  AP_CHANNEL      = 6;
+constexpr uint8_t  AP_MAX_STATIONS = 4;      // Wi-Fi devices; only one browser may play
+constexpr uint16_t WEB_PORT        = 80;
+constexpr uint32_t NET_STATE_HEARTBEAT_MS = 2000;   // state is resent at least this often
+constexpr uint32_t NET_CLIENT_TIMEOUT_MS  = 10000;  // drop a browser silent this long

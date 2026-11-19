@@ -1,0 +1,100 @@
+{
+  "_comment": "Protocol v1 golden messages. test/test_protocol and tools/mock_console.py --self-test must serialize exactly these (compact JSON, same key order). Scenario for 'state': coins 9, selected carrot, wheat on tile 0 planted at 5, carrot on tile 3 planted at 7, now 20.",
+  "hello_dev": {
+    "t": "hello",
+    "proto": 1,
+    "growMode": "dev",
+    "cols": 8,
+    "rows": 4,
+    "crops": [
+      {
+        "name": "WHEAT",
+        "seedCost": 1,
+        "sellPrice": 2,
+        "growSeconds": 10
+      },
+      {
+        "name": "CARROT",
+        "seedCost": 2,
+        "sellPrice": 4,
+        "growSeconds": 20
+      },
+      {
+        "name": "PUMPKIN",
+        "seedCost": 4,
+        "sellPrice": 8,
+        "growSeconds": 30
+      }
+    ]
+  },
+  "state": {
+    "t": "state",
+    "now": 20,
+    "coins": 9,
+    "selected": 1,
+    "tiles": [
+      [0, 5],
+      [-1, 0],
+      [-1, 0],
+      [1, 7],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0],
+      [-1, 0]
+    ]
+  },
+  "event_harvest_web": {
+    "t": "event",
+    "kind": "harvested",
+    "tile": 3,
+    "crop": 1,
+    "amount": 4,
+    "from": "web"
+  },
+  "event_plant_console": {
+    "t": "event",
+    "kind": "planted",
+    "tile": 0,
+    "crop": 0,
+    "amount": 1,
+    "from": "console"
+  },
+  "result_ok": {
+    "t": "result",
+    "id": 8,
+    "ok": true
+  },
+  "result_no_coins": {
+    "t": "result",
+    "id": 7,
+    "ok": false,
+    "reason": "no_coins"
+  },
+  "busy": {
+    "t": "busy"
+  }
+}

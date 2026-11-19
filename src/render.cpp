@@ -1,5 +1,5 @@
 // render.cpp - U8g2 full-buffer drawing. Layout (128x64):
-//   y 0..7   status bar: coins left, cursor-tile info right
+//   y 0..7   status bar: coins and Wi-Fi glyph left, cursor-tile info right
 //   y 8..63  8 x 4 grid of 16 x 14 px plots
 #include "render.h"
 #include <Arduino.h>
@@ -88,10 +88,24 @@ void formatTileInfo(char* buf, size_t n, const Game& g, const Tile& t, uint32_t 
     }
 }
 
+// Wi-Fi glyph, a 7 x 6 wedge: outline = hotspot up, nobody connected;
+// filled = a browser is connected; nothing = no network.
+void drawNetGlyph(int x, NetStatus s) {
+    if (s == NetStatus::Down) return;
+    if (s == NetStatus::Client) {
+        u8g2.drawTriangle(x, 0, x + 7, 0, x + 3, 6);   // U8g2 fills triangles
+    } else {
+        u8g2.drawLine(x, 0, x + 6, 0);
+        u8g2.drawLine(x, 0, x + 3, 6);
+        u8g2.drawLine(x + 6, 0, x + 3, 6);
+    }
+}
+
 void drawStatus(const View& v) {
     char buf[24];
     snprintf(buf, sizeof(buf), "$%lu", static_cast<unsigned long>(v.game->coins));
     u8g2.drawStr(0, 0, buf);
+    drawNetGlyph(u8g2.getStrWidth(buf) + 3, v.net);
     formatTileInfo(buf, sizeof(buf), *v.game, v.game->tiles[v.cursor], v.now);
     u8g2.drawStr(128 - u8g2.getStrWidth(buf), 0, buf);
 }

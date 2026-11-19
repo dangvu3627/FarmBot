@@ -1,5 +1,12 @@
-# Wokwi for VS Code: runs the firmware built by `pio run -e esp32dev`.
+# Wokwi for VS Code: runs the simulation build (`pio run -e esp32dev_sim`).
+# That build joins Wokwi-GUEST instead of making the FarmBot hotspot, and the
+# forward below makes its web link reachable from this laptop:
+#   ws://localhost:8180/ws   (open the page with ?console=localhost:8180)
 [wokwi]
 version = 1
-firmware = '.pio/build/esp32dev/firmware.bin'
-elf = '.pio/build/esp32dev/firmware.elf'
+firmware = '.pio/build/esp32dev_sim/firmware.bin'
+elf = '.pio/build/esp32dev_sim/firmware.elf'
+
+[[net.forward]]
+from = "localhost:8180"
+to = "target:80"

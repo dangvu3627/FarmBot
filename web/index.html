@@ -28,6 +28,7 @@
           <span id="coins" aria-live="polite">$12</span>
         </span>
         <span class="pill" id="game-time">Game time 0 s</span>
+        <span class="pill pill--link" id="link" data-mode="connecting" role="status">Connecting…</span>
         <button type="button" class="shop-button" id="shop-open" aria-haspopup="dialog">
           <span class="shop-button__icon" id="shop-icon"></span>
           <span class="shop-button__text">
@@ -45,6 +46,16 @@
           You can still play with the arrow keys, Enter and the button below.
         </p>
         <p class="viewport__hint" aria-hidden="true">Drag to turn · Scroll to zoom</p>
+        <div class="toasts" id="toasts" aria-live="polite"></div>
+        <div class="demo" id="demo" hidden>
+          <h2 class="demo__title">Play on your FarmBot console</h2>
+          <p class="demo__intro">This farm is a demo that plays itself. To play your own:</p>
+          <ol class="demo__steps" id="demo-steps">
+            <li>Turn on the console.</li>
+            <li>Join the Wi-Fi network <strong>FarmBot</strong> (password <strong>farmbot123</strong>, unless you changed it in <code>config.h</code>).</li>
+            <li>Keep this page open. It connects by itself.</li>
+          </ol>
+        </div>
       </section>
 
       <section class="card info" aria-label="Selected plot">
@@ -68,11 +79,10 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
     </div>
-    <p class="shop__intro">Pick the seed you plant next. You pay when you plant it.</p>
+    <p class="shop__intro">Pick the seed you plant next, here or on the console. You pay when you plant it.</p>
     <div class="shop__list" id="seed-list"></div>
     <div class="shop__foot">
       <span class="shop__meta" id="grow-mode">Dev grow times</span>
-      <button type="button" class="button button--ghost" id="new-farm">New farm</button>
     </div>
   </dialog>
 </body>

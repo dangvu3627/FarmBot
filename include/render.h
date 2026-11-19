@@ -2,6 +2,7 @@
 #pragma once
 #include <stdint.h>
 #include "game.h"
+#include "net.h"
 
 struct View {
     const Game* game;
@@ -9,6 +10,7 @@ struct View {
     bool        menuOpen;
     uint8_t     menuRow;
     uint32_t    now;
+    NetStatus   net;        // Wi-Fi glyph after the coins
 };
 
 void renderBegin();

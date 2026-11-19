@@ -81,7 +81,23 @@ body {
   font: 600 15px var(--sans);
   cursor: pointer;
 }
-.shop-button:hover { background: #BDEE80; }
+.shop-button:hover:not(:disabled) { background: #BDEE80; }
+.shop-button:disabled { background: #22302A; border-color: var(--line-strong); color: var(--muted); cursor: not-allowed; }
+.shop-button:disabled .shop-button__seed { color: var(--muted); }
+
+/* Console link status. The dot carries the colour; the text says the state. */
+.pill--link::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.pill--link[data-mode="live"] { color: var(--text); }
+.pill--link[data-mode="live"]::before { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+.pill--link[data-mode="busy"]::before,
+.pill--link[data-mode="mismatch"]::before { background: var(--gold); }
+.pill--link[data-mode="demo"]::before { background: transparent; border: 1px solid var(--muted); }
 .shop-button__icon {
   display: inline-flex;
   align-items: center;
@@ -114,7 +130,57 @@ body {
   padding: 0;
   background: #24402C;
 }
-.viewport canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.viewport canvas { display: block; width: 100%; height: 100%; touch-action: none; transition: filter 0.4s; }
+/* Offline / busy: the frozen last-known farm, read-only. */
+.viewport--readonly canvas { filter: saturate(0.35) brightness(0.7); }
+.viewport--readonly .plot-bars { opacity: 0.6; }
+
+/* Demo-mode instructions over the self-playing farm. */
+.demo {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  max-width: min(360px, calc(100% - 32px));
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--line-strong);
+  background: #0E1411E6;
+  color: var(--body);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.demo[hidden] { display: none; }
+.demo__title { margin: 0 0 6px; font-family: var(--pixel); font-weight: 400; font-size: 16px; color: var(--text); }
+.demo__intro { margin: 0 0 8px; }
+.demo__steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.demo strong { color: var(--text); }
+.demo code { font-size: 13px; }
+
+/* Toasts: console actions and rejected clicks. */
+.toasts {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: #0E1411E6;
+  color: var(--text);
+  font-size: 14px;
+  animation: toast-in 0.2s ease-out;
+}
+.toast--earn { border-color: #5A4A1E; color: var(--gold); }
+.toast--error { border-color: #7A3B30; color: #F3B4A8; }
+.toast--out { animation: toast-out 0.3s ease-in forwards; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes toast-out { to { opacity: 0; } }
 .viewport__hint {
   position: absolute;
   right: 14px;
@@ -185,6 +251,7 @@ body {
   .float-text { animation-duration: 0.6s; }
   @keyframes float-up { from { opacity: 1; } to { opacity: 0; } }
   .plot-bar__fill { transition: none; }
+  .toast, .toast--out { animation-duration: 0.01s; }
 }
 
 /* ---- selected plot info bar ---- */

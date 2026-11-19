@@ -1,7 +1,11 @@
 // game.js - pure game rules, a direct port of the firmware's game.cpp.
 // No DOM, no Three.js, no clock reads: everything time-dependent takes `now`
 // (game seconds), so the rules match the console exactly.
-import { CROPS, CROP_COUNT } from './crops.js';
+//
+// When a console is connected it applies the rules and the web only draws
+// its state; these functions then serve the display (stages, percentages)
+// and demo mode.
+import { CROPS } from './crops.js';
 
 export const GRID_COLS = 8;
 export const GRID_ROWS = 4;
@@ -15,7 +19,7 @@ export const STAGE_NAMES = ['Empty', 'Seed', 'Sprout', 'Growing', 'Ripe'];
 
 export const PressResult = Object.freeze({ None: 0, Planted: 1, Harvested: 2 });
 
-const validCrop = (c) => Number.isInteger(c) && c >= 0 && c < CROP_COUNT;
+const validCrop = (c) => Number.isInteger(c) && c >= 0 && c < CROPS.length;
 
 // Seconds since planting, as uint32 subtraction like the firmware, so it
 // stays correct if `now` ever wraps past 2^32.
@@ -109,6 +113,18 @@ export function pressTile(game, idx, now) {
     default:
       return PressResult.None;
   }
+}
+
+// Builds a game from a console `state` message ({coins, selected, tiles:
+// [[crop, plantedAt], ...]}). Returns null if it doesn't pass gameIsValid().
+export function gameFromState(msg) {
+  if (!msg || !Array.isArray(msg.tiles)) return null;
+  const game = {
+    coins: msg.coins,
+    selected: msg.selected,
+    tiles: msg.tiles.map((t) => (Array.isArray(t) ? { crop: t[0], plantedAt: t[1] } : null)),
+  };
+  return game.tiles.every(Boolean) && gameIsValid(game) ? game : null;
 }
 
 // (cur + steps) wrapped into [0, n).
